@@ -1,112 +1,121 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+import React, { useEffect, useState } from "react";
+import { Button, Text, Vibration, View, SafeAreaView, StyleSheet, Dimensions } from "react-native";
+import SystemSetting from 'react-native-system-setting'
 
-import React from 'react';
-import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import AppNavigation from "./navigation/AppNavigation";
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const Separator = () => {
+  return <View style={styles.separator} />;
+}
 
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+const App = () => {
+  const [orientation, setOrientation] = useState("PORTRAIT");
+  const [volume, setVolume] = useState(0.53);
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  useEffect(() => {
+    Dimensions.addEventListener('change', ({ window: { width, height } }) => {
+      if (width < height) {
+        setOrientation("PORTRAIT")
+        console.log('PORTRAIT')
+      } else {
+        setOrientation("LANDSCAPE")
+        console.log('LANDSCAPE')
+      }
+    })
+
+  }, []);
+
+
+  useEffect(() => {
+    SystemSetting.setVolume(0.53);
+    SystemSetting.addVolumeListener((data) => {
+      const volume = data.value;
+      setVolume(data.value)
+      console.log('Volume lvl: ' + volume);
+      if (volume >= 0.5 && orientation == "PORTRAIT") {
+        Vibration.vibrate(PATTERN)
+
+      } else {
+        Vibration.vibrate(3000)
+      }
+    });
+
+  }, []);
+
+  const ONE_SECOND_IN_MS = 1000;
+  const PATTERN = [
+    1 * ONE_SECOND_IN_MS,
+    3 * ONE_SECOND_IN_MS,
+    1 * ONE_SECOND_IN_MS,
+    5 * ONE_SECOND_IN_MS,
+  ];
+
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+    <SafeAreaView style={styles.container}>
+            <Text style={styles.header}>Vibro simulator</Text>
+      <Text style={styles.paragraph}>Orientation actuel en {orientation}</Text>
+      <Text style={styles.paragraph}>Puissance volume actuelle {volume.toFixed(2)}</Text>
+
+
+      <View>
+        <Button title="Une vibration" onPress={() => Vibration.vibrate()} />
+      </View>
+      <Separator />
+
+      <View>
+        <Button
+          title="Vibration 10 secondes"
+          onPress={() => Vibration.vibrate(10* ONE_SECOND_IN_MS)}
+        />
+      </View>
+
+      <Separator />
+      <Button
+        title="Stop vibration"
+        onPress={() => Vibration.cancel()}
+        color="#FF0000"
+      />
+      <View style={{height: 25}} />
+      <AppNavigation />
+
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    paddingTop: 44,
+    padding: 8,
+    backgroundColor: "#2E2E2E"
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  header: {
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    color:'white',
+    fontWeight:'bold',
+    marginTop: 15,
+    marginBottom: 30,
+    textAlign: "center"
   },
-  sectionDescription: {
-    marginTop: 8,
+  paragraph: {
     fontSize: 18,
-    fontWeight: '400',
+    fontWeight: "bold",
+    textAlign: "center",
+    color:'white',
+    fontWeight:'bold',
+    marginBottom: 10,
+    textAlign: "center"
   },
-  highlight: {
-    fontWeight: '700',
-  },
+  separator: {
+    marginVertical: 8,
+    borderBottomColor: "#737373",
+    borderBottomWidth: StyleSheet.hairlineWidth
+  }
 });
 
 export default App;
